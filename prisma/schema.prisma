@@ -1,0 +1,572 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  RESTAURANT_OWNER
+  RESTAURANT_STAFF
+}
+
+enum RestaurantStatus {
+  trial
+  active
+  past_due
+  suspended
+  inactive
+}
+
+enum StaffRole {
+  manager
+  cashier
+  kitchen
+}
+
+enum VegType {
+  veg
+  non_veg
+  egg
+}
+
+enum DiscountType {
+  flat
+  percentage
+}
+
+enum OrderStatus {
+  pending
+  accepted
+  rejected
+  preparing
+  ready
+  out_for_delivery
+  delivered
+  cancelled
+}
+
+enum PaymentStatus {
+  unpaid
+  cod
+  payment_pending_verification
+  paid
+  failed
+  refunded
+}
+
+enum OrderType {
+  delivery
+  pickup
+  dine_in
+}
+
+enum PaymentMode {
+  cod
+  upi_qr
+  payment_link
+}
+
+enum FeeType {
+  per_order
+  subscription
+  manual
+}
+
+enum LedgerStatus {
+  paid
+  unpaid
+}
+
+enum WhatsAppDirection {
+  incoming
+  outgoing
+}
+
+enum WhatsAppMessageStatus {
+  sent
+  delivered
+  failed
+  received
+}
+
+enum SupportRequestStatus {
+  open
+  resolved
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  passwordHash     String
+  name             String
+  role             UserRole
+  passwordChangeRecommended Boolean  @default(false)
+  restaurantId     String?
+  restaurant       Restaurant?       @relation(fields: [restaurantId], references: [id])
+  restaurantStaff  RestaurantStaff?
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  statusHistories  OrderStatusHistory[]
+  supportRequests  SupportRequest[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Restaurant {
+  id                         String                   @id @default(cuid())
+  name                       String
+  slug                       String                   @unique
+  customDomain               String?                  @unique
+  customDomainVerified       Boolean                  @default(false)
+  address                    String
+  phone                      String
+  whatsappNumber             String
+  logoUrl                    String?
+  themePrimary               String                   @default("#1f2933")
+  themeAccent                String                   @default("#e6902e")
+  themeBackground            String                   @default("#fff7ed")
+  openingTime                String
+  closingTime                String
+  currency                   String                   @default("INR")
+  status                     RestaurantStatus         @default(trial)
+  trialStartDate             DateTime
+  trialEndDate               DateTime
+  subscriptionStartDate      DateTime?
+  subscriptionEndDate        DateTime?
+  gracePeriodDays            Int                      @default(5)
+  planType                   String                   @default("Starter")
+  perOrderFeeEnabled         Boolean                  @default(false)
+  perOrderFeeAmount          Decimal                  @default(0) @db.Decimal(10, 2)
+  subscriptionAmount         Decimal                  @default(999) @db.Decimal(10, 2)
+  paymentDueAmount           Decimal                  @default(0) @db.Decimal(10, 2)
+  deliveryEnabled            Boolean                  @default(true)
+  pickupEnabled              Boolean                  @default(true)
+  dineInEnabled              Boolean                  @default(true)
+  deliveryCharge             Decimal                  @default(30) @db.Decimal(10, 2)
+  freeDeliveryAbove          Decimal?                 @db.Decimal(10, 2)
+  minimumOrderAmount         Decimal                  @default(99) @db.Decimal(10, 2)
+  deliveryRadiusText         String?
+  codEnabled                 Boolean                  @default(true)
+  upiQrEnabled               Boolean                  @default(true)
+  upiId                      String?
+  upiQrImageUrl              String?
+  paymentInstructions        String?
+  users                      User[]
+  staff                      RestaurantStaff[]
+  subscription               RestaurantSubscription?
+  categories                 MenuCategory[]
+  menuItems                  MenuItem[]
+  customers                  Customer[]
+  carts                      Cart[]
+  orders                     Order[]
+  payments                   Payment[]
+  coupons                    Coupon[]
+  platformFeeLedger          PlatformFeeLedger[]
+  invoices                   Invoice[]
+  subscriptionPayments       SubscriptionPayment[]
+  whatsappMessages           WhatsAppMessage[]
+  whatsappSessions           WhatsAppSession[]
+  diningTables               DiningTable[]
+  tableBookings              TableBooking[]
+  bookingSettings            BookingSetting?
+  callEvents                 CallEvent[]
+  campaigns                  Campaign[]
+  auditLogs                  AuditLog[]
+  supportRequests            SupportRequest[]
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
+}
+
+model RestaurantStaff {
+  id           String     @id @default(cuid())
+  restaurantId String
+  userId       String     @unique
+  role         StaffRole  @default(kitchen)
+  active       Boolean    @default(true)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  monthlyPrice Decimal @db.Decimal(10, 2)
+  setupFee    Decimal  @db.Decimal(10, 2)
+  features    String[]
+  active      Boolean  @default(true)
+  subscriptions RestaurantSubscription[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RestaurantSubscription {
+  id            String     @id @default(cuid())
+  restaurantId  String     @unique
+  planId        String
+  status        RestaurantStatus @default(trial)
+  startDate     DateTime
+  endDate       DateTime?
+  lastPaymentDate DateTime?
+  amountDue     Decimal    @default(0) @db.Decimal(10, 2)
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  restaurantId String?
+  actorId      String?
+  action       String
+  entityType   String
+  entityId     String?
+  metadata     Json?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  actor        User?       @relation("AuditActor", fields: [actorId], references: [id])
+  createdAt    DateTime    @default(now())
+}
+
+model MenuCategory {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  sortOrder    Int        @default(0)
+  active       Boolean    @default(true)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  items        MenuItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([restaurantId, name])
+}
+
+model MenuItem {
+  id             String       @id @default(cuid())
+  restaurantId   String
+  categoryId     String
+  name           String
+  price          Decimal      @db.Decimal(10, 2)
+  imageUrl       String?
+  description    String?
+  vegType        VegType      @default(veg)
+  available      Boolean      @default(true)
+  recommended    Boolean      @default(false)
+  popular        Boolean      @default(false)
+  sortOrder      Int          @default(0)
+  restaurant     Restaurant   @relation(fields: [restaurantId], references: [id])
+  category       MenuCategory @relation(fields: [categoryId], references: [id])
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([restaurantId, name])
+}
+
+model Customer {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String?
+  phone        String
+  totalOrders  Int        @default(0)
+  totalSpend   Decimal    @default(0) @db.Decimal(10, 2)
+  lastOrderDate DateTime?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  carts        Cart[]
+  orders       Order[]
+  whatsappSessions WhatsAppSession[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([restaurantId, phone])
+}
+
+model Cart {
+  id                  String     @id @default(cuid())
+  restaurantId        String
+  customerId          String?
+  sessionId           String
+  couponId            String?
+  customerInstructions String?
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id])
+  customer            Customer?  @relation(fields: [customerId], references: [id])
+  coupon              Coupon?    @relation(fields: [couponId], references: [id])
+  items               CartItem[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  menuItemId String
+  quantity   Int      @default(1)
+  notes      String?
+  cart       Cart     @relation(fields: [cartId], references: [id])
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Order {
+  id                  String     @id @default(cuid())
+  orderNumber         Int
+  orderCode           String     @unique
+  restaurantId        String
+  customerId          String?
+  customerName        String?
+  customerPhone       String
+  orderType           OrderType
+  status              OrderStatus @default(pending)
+  paymentStatus       PaymentStatus @default(unpaid)
+  paymentMode         PaymentMode
+  subtotal            Decimal    @db.Decimal(10, 2)
+  discountAmount      Decimal    @default(0) @db.Decimal(10, 2)
+  deliveryCharge      Decimal    @default(0) @db.Decimal(10, 2)
+  packingCharge       Decimal    @default(0) @db.Decimal(10, 2)
+  totalAmount         Decimal    @db.Decimal(10, 2)
+  deliveryAddress     String?
+  landmark            String?
+  locationLink        String?
+  pickupTime          String?
+  tableNumber         String?
+  instructions        String?
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id])
+  customer            Customer?  @relation(fields: [customerId], references: [id])
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  payments            Payment[]
+  platformFeeLedger   PlatformFeeLedger[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@unique([restaurantId, orderNumber])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  menuItemId  String?
+  itemName    String
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  notes       String?
+  order       Order    @relation(fields: [orderId], references: [id])
+  menuItem    MenuItem? @relation(fields: [menuItemId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  changedById String?
+  order     Order       @relation(fields: [orderId], references: [id])
+  changedBy User?       @relation(fields: [changedById], references: [id])
+  createdAt DateTime    @default(now())
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  restaurantId String
+  orderId      String?
+  mode         PaymentMode
+  status       PaymentStatus
+  amount       Decimal       @db.Decimal(10, 2)
+  reference    String?
+  instructions String?
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  order        Order?        @relation(fields: [orderId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Coupon {
+  id                 String       @id @default(cuid())
+  restaurantId       String
+  code               String
+  discountType       DiscountType
+  discountValue      Decimal      @db.Decimal(10, 2)
+  minimumOrderAmount Decimal      @default(0) @db.Decimal(10, 2)
+  maxDiscount        Decimal?     @db.Decimal(10, 2)
+  startDate          DateTime
+  endDate            DateTime
+  active             Boolean      @default(true)
+  restaurant         Restaurant   @relation(fields: [restaurantId], references: [id])
+  carts              Cart[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([restaurantId, code])
+}
+
+model PlatformFeeLedger {
+  id                String       @id @default(cuid())
+  restaurantId      String
+  orderId           String?
+  orderAmount       Decimal      @default(0) @db.Decimal(10, 2)
+  platformFeeAmount Decimal      @db.Decimal(10, 2)
+  feeType           FeeType
+  billingMonth      String
+  status            LedgerStatus @default(unpaid)
+  restaurant        Restaurant   @relation(fields: [restaurantId], references: [id])
+  order             Order?       @relation(fields: [orderId], references: [id])
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Invoice {
+  id           String       @id @default(cuid())
+  restaurantId String
+  invoiceNumber String      @unique
+  billingMonth String
+  amount       Decimal      @db.Decimal(10, 2)
+  status       LedgerStatus @default(unpaid)
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model SubscriptionPayment {
+  id           String     @id @default(cuid())
+  restaurantId String
+  amount       Decimal    @db.Decimal(10, 2)
+  paidAt       DateTime
+  reference    String?
+  notes        String?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model WhatsAppMessage {
+  id            String                @id @default(cuid())
+  restaurantId  String
+  customerPhone String
+  direction     WhatsAppDirection
+  message       String
+  status        WhatsAppMessageStatus @default(sent)
+  metadata      Json?
+  restaurant    Restaurant            @relation(fields: [restaurantId], references: [id])
+  createdAt     DateTime              @default(now())
+}
+
+model WhatsAppSession {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  customerId    String?
+  customerPhone String
+  lastMessageAt DateTime   @default(now())
+  state         String     @default("idle")
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  customer      Customer?  @relation(fields: [customerId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model DiningTable {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  tableNumber   String
+  seatingCapacity Int
+  area          String?
+  active        Boolean    @default(true)
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  bookings      TableBooking[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("tables")
+}
+
+model BookingSetting {
+  id              String     @id @default(cuid())
+  restaurantId    String     @unique
+  bookingEnabled  Boolean    @default(false)
+  bookingDurationMinutes Int  @default(90)
+  bufferMinutes   Int        @default(15)
+  maxGuestsPerSlot Int       @default(20)
+  advanceAmount   Decimal    @default(0) @db.Decimal(10, 2)
+  cancellationPolicy String?
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model TableBooking {
+  id             String     @id @default(cuid())
+  restaurantId   String
+  tableId        String?
+  bookingCode    String
+  customerName   String
+  customerPhone  String
+  guests         Int
+  bookingDate    DateTime
+  bookingTime    String
+  occasion       String?
+  specialRequest String?
+  status         String     @default("pending")
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id])
+  table          DiningTable? @relation(fields: [tableId], references: [id])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([restaurantId, bookingCode])
+}
+
+model CallEvent {
+  id           String     @id @default(cuid())
+  restaurantId String
+  phone        String
+  provider     String?
+  eventType    String
+  metadata     Json?
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+model Campaign {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  segment      String
+  messageDraft String
+  status       String     @default("draft")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  recipients   CampaignRecipient[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model CampaignRecipient {
+  id          String   @id @default(cuid())
+  campaignId  String
+  phone       String
+  status      String   @default("pending")
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SupportRequest {
+  id           String               @id @default(cuid())
+  restaurantId String
+  userId       String
+  title        String
+  message      String
+  adminReply   String?
+  status       SupportRequestStatus @default(open)
+  resolvedAt   DateTime?
+  restaurant   Restaurant           @relation(fields: [restaurantId], references: [id])
+  user         User                 @relation(fields: [userId], references: [id])
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}

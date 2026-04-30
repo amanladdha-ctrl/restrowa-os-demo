@@ -1,0 +1,23 @@
+{
+  "restaurantSlug": "new-demo-olddays",
+  "categories": [
+    {
+      "name": "Sample Imported Snacks",
+      "sortOrder": 20,
+      "active": true,
+      "items": [
+        {
+          "name": "Imported Crispy Corn",
+          "price": 149,
+          "vegType": "veg",
+          "description": "Example item from a bulk menu import file.",
+          "imageUrl": "",
+          "available": true,
+          "popular": true,
+          "recommended": false,
+          "sortOrder": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+categoryName,categorySortOrder,itemName,price,vegType,description,imageUrl,available,recommended,popular,itemSortOrder
+Starters,1,Paneer Tikka,249,veg,Smoky paneer cubes with mint chutney.,https://example.com/paneer-tikka.jpg,yes,yes,yes,1
+Starters,1,Crispy Corn,189,veg,Crunchy corn tossed with peppers.,https://example.com/crispy-corn.jpg,yes,no,yes,2
+Main Course,2,Dal Tadka,169,veg,Yellow dal finished with cumin tadka.,https://example.com/dal-tadka.jpg,yes,yes,no,1
+Main Course,2,Butter Naan,35,veg,Soft tandoor naan with butter.,https://example.com/butter-naan.jpg,yes,no,yes,2
+Beverages,3,Cold Coffee,129,veg,Cafe-style chilled coffee.,https://example.com/cold-coffee.jpg,yes,yes,yes,1
