@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.9.3 - Public Flow Speed Pass
+
+Added:
+
+- Client-side add-to-cart flow on the public menu, so cart count and amount update live without a full page refresh.
+- Dedicated JSON cart-add API route for lighter public ordering interactions.
+- Shared route loading states for login, menu, cart, checkout, admin, owner, and staff pages.
+- Pending button feedback like `Signing you in...` and `Adding...` so clicks no longer feel invisible.
+
+Changed:
+
+- Removed recent-order lookup from the first public menu render to reduce page-load work for trial traffic.
+- Public menu cart summary now stays visible as a live-updating checkout shortcut.
+
+Verified:
+
+- `npm run typecheck`
+- `npm run build`
+
 ## 0.9.2 - Prepaid First And Excel Menu Import
 
 Added:

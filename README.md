@@ -4,7 +4,7 @@ WhatsApp-first direct ordering SaaS for restaurants. This repo is being built ph
 
 ## Current Phase
 
-Phase 8 prep: Link-first payment-ready ordering, custom-domain foundation, and Excel menu import.
+Phase 8 prep: Link-first payment-ready ordering, custom-domain foundation, Excel menu import, and public flow speed improvements.
 
 Built so far:
 
@@ -62,6 +62,9 @@ Built so far:
 - Owner menu manager supports Excel/CSV bulk upload for full-menu onboarding.
 - Super Admin restaurant detail page also supports Excel/CSV bulk menu upload.
 - Downloadable `.xlsx` and `.csv` templates are available for one-shot restaurant menu setup.
+- Public menu add-to-cart now updates cart count and total live without a full page refresh.
+- Public menu no longer fetches recent-order history during first load, which keeps trial/demo browsing lighter.
+- Login, menu, cart, checkout, admin, owner, and staff routes now show explicit loading or pending feedback instead of blank waiting states.
 
 ## Recommended Stack
 
@@ -210,6 +213,7 @@ Open:
 - In Super Admin restaurant detail, set Logo URL and theme colors.
 - Confirm `/menu/mewad-bites` uses the restaurant logo/colors.
 - Add an item from public menu and confirm cart count updates.
+- Add an item from public menu and confirm the cart summary updates live without a full page refresh.
 - Open cart, update quantity, remove item, and apply coupon `DEMO10`.
 - Continue to checkout.
 - Place a delivery order with COD.
@@ -260,6 +264,7 @@ Open:
 - Real-time websocket push is not built yet; customer should refresh tracking to see the latest status.
 - WhatsApp simulator is internal/mock only right now; real Meta/BSP webhook integration is still later.
 - Owner password-change recommendation is set for new admin-created owner accounts, not for older seeded demo accounts.
+- Vercel free plus remote managed Postgres can still feel slower than same-region app+database hosting during trial traffic. The public flow now avoids full refresh on add-to-cart, but hosting latency can still affect overall responsiveness.
 
 ## What To Send Next
 

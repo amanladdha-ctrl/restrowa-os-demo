@@ -59,6 +59,7 @@
 - [x] Order status history creation.
 - [x] Platform per-order fee ledger creation.
 - [x] Order confirmation and tracking page.
+- [x] No-refresh live add-to-cart updates on public menu.
 - [ ] Client-side cart drawer polish.
 - [ ] Better QR image for mock UPI.
 - [ ] Customer-friendly validation without full page redirects.
@@ -91,6 +92,7 @@
 - [ ] Real auto payment verification via webhook/gateway.
 - [ ] Full custom-domain white-label routing for menu, cart, checkout, and tracking.
 - [ ] Flexible spreadsheet column mapping and import preview.
+- [ ] Same-region production hosting or colocated app/database setup for faster public trial performance.
 - [ ] Platform fee ledger and billing.
 - [ ] Reports and basic CRM.
 - [ ] Table booking module.

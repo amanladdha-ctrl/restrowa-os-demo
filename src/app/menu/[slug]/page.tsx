@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { BrandLogo } from "@/components/brand-logo";
+import { CartSummaryLink } from "@/components/cart-summary-link";
 import { FoodImage } from "@/components/food-image";
-import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { StatusBadge } from "@/components/status-badge";
-import { addToCartAction } from "@/app/menu/actions";
 import { calculateCartTotals, getExistingCartForRestaurant } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { getRecentOrdersForRestaurant } from "@/lib/recent-orders";
 import { getRestaurantOpenState } from "@/lib/restaurant-open";
 import { evaluateRestaurantSubscription } from "@/lib/subscription-enforcement";
 
@@ -24,6 +23,7 @@ export default async function PublicMenuPage({
 }) {
   const { slug } = await params;
   const query = await searchParams;
+
   const restaurant = await prisma.restaurant.findUnique({
     where: { slug },
     include: {
@@ -49,25 +49,15 @@ export default async function PublicMenuPage({
     restaurant.openingTime,
     restaurant.closingTime
   );
+
   const itemCount = restaurant.categories.reduce(
     (total, category) => total + category.items.length,
     0
   );
-  const [cart, recentOrderRefs] = await Promise.all([
-    getExistingCartForRestaurant(restaurant.id),
-    getRecentOrdersForRestaurant(restaurant.id)
-  ]);
+
+  const cart = await getExistingCartForRestaurant(restaurant.id);
   const cartTotals = cart ? calculateCartTotals(cart) : null;
-  const recentOrders = recentOrderRefs.length
-    ? await prisma.order.findMany({
-        where: {
-          restaurantId: restaurant.id,
-          id: { in: recentOrderRefs.map((order) => order.orderId) }
-        },
-        orderBy: { createdAt: "desc" },
-        take: 3
-      })
-    : [];
+
   const themeStyle = {
     "--restro-primary": restaurant.themePrimary,
     "--restro-accent": restaurant.themeAccent,
@@ -95,7 +85,10 @@ export default async function PublicMenuPage({
           </div>
         ) : null}
 
-        <div className="p-5 text-white" style={{ backgroundColor: "var(--restro-primary)" }}>
+        <div
+          className="p-5 text-white"
+          style={{ backgroundColor: "var(--restro-primary)" }}
+        >
           <div className="flex items-start justify-between gap-4">
             <div>
               <p
@@ -162,7 +155,7 @@ export default async function PublicMenuPage({
                     href={`/menu/${restaurant.slug}/cart`}
                     style={{ backgroundColor: "var(--restro-primary)" }}
                   >
-                    Cart {cartTotals?.itemCount ? `(${cartTotals.itemCount})` : ""}
+                    Cart
                   </Link>
                   <Link
                     className="rounded-full bg-white px-4 py-2 text-xs font-black text-clay"
@@ -174,44 +167,13 @@ export default async function PublicMenuPage({
               </div>
             </div>
 
-            {query.added === "1" ? (
-              <div className="mt-4 rounded-3xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">
-                Item added to cart.
-              </div>
-            ) : null}
-
-            {cartTotals?.itemCount ? (
-              <Link
-                className="mt-4 flex items-center justify-between rounded-3xl px-5 py-4 text-sm font-black text-white shadow-soft"
-                href={`/menu/${restaurant.slug}/cart`}
-                style={{ backgroundColor: "var(--restro-primary)" }}
-              >
-                <span>{cartTotals.itemCount} item(s) in cart</span>
-                <span>{formatCurrency(cartTotals.totalAmount)} · Checkout</span>
-              </Link>
-            ) : null}
-
-            {recentOrders.length ? (
-              <div className="mt-4 rounded-3xl bg-white p-4 shadow-soft">
-                <p className="font-black text-ink">Your recent orders</p>
-                <div className="mt-3 grid gap-2">
-                  {recentOrders.map((order) => (
-                    <Link
-                      className="flex items-center justify-between rounded-2xl bg-cream px-4 py-3 text-sm"
-                      href={`/menu/${restaurant.slug}/orders/${order.id}/track`}
-                      key={order.id}
-                    >
-                      <span className="font-black text-ink">
-                        {order.orderCode} · {order.status.replaceAll("_", " ")}
-                      </span>
-                      <span className="font-black text-clay">
-                        {formatCurrency(order.totalAmount.toString())}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+            <CartSummaryLink
+              className="mt-4 flex items-center justify-between rounded-3xl px-5 py-4 text-sm font-black text-white shadow-soft"
+              href={`/menu/${restaurant.slug}/cart`}
+              initialItemCount={cartTotals?.itemCount ?? 0}
+              initialTotalAmount={cartTotals?.totalAmount ?? 0}
+              themeColor={restaurant.themePrimary}
+            />
 
             {itemCount === 0 ? (
               <div className="mt-5 rounded-3xl border border-dashed border-orange-200 bg-cream p-6 text-center">
@@ -267,20 +229,11 @@ export default async function PublicMenuPage({
                                 <span className="font-black text-clay">
                                   {formatCurrency(item.price.toString())}
                                 </span>
-                                <form action={addToCartAction}>
-                                  <input
-                                    name="restaurantSlug"
-                                    type="hidden"
-                                    value={restaurant.slug}
-                                  />
-                                  <input name="menuItemId" type="hidden" value={item.id} />
-                                  <input name="quantity" type="hidden" value="1" />
-                                  <PendingSubmitButton
-                                    className="rounded-full px-4 py-2 text-xs font-black text-white disabled:cursor-wait disabled:opacity-70"
-                                    label="Add"
-                                    pendingLabel="Adding..."
-                                  />
-                                </form>
+                                <AddToCartButton
+                                  menuItemId={item.id}
+                                  restaurantSlug={restaurant.slug}
+                                  themeColor={restaurant.themePrimary}
+                                />
                               </div>
                             </div>
                           </div>
