@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.4 - Session Guard Speed Pass
+
+Changed:
+
+- Signed session cookies now store the role, restaurant context, and password-change hint needed for protected routes.
+- Protected page loads no longer need a separate user lookup query just to read the current session after login.
+
+Verified:
+
+- `npm run typecheck`
+- `npm run build`
+
 ## 0.9.3 - Public Flow Speed Pass
 
 Added:

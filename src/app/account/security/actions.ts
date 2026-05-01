@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth";
+import { requireRole, setSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const schema = z
@@ -59,6 +59,18 @@ export async function changePasswordAction(formData: FormData) {
       passwordHash,
       passwordChangeRecommended: false
     }
+  });
+
+  await setSession({
+    ...user,
+    passwordChangeRecommended: false,
+    restaurant: user.restaurant
+      ? {
+          ...user.restaurant,
+          paymentDueAmount: String(user.restaurant.paymentDueAmount),
+          trialEndDate: String(user.restaurant.trialEndDate)
+        }
+      : null
   });
 
   redirect(`${returnTo}?password_changed=1`);

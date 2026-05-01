@@ -66,6 +66,7 @@ Built so far:
 - Cart page quantity changes, remove actions, and coupon changes now update live without a full page refresh.
 - Public menu no longer fetches recent-order history during first load, which keeps trial/demo browsing lighter.
 - Login, menu, cart, checkout, admin, owner, and staff routes now show explicit loading or pending feedback instead of blank waiting states.
+- Signed session cookies now carry the basic user and restaurant context needed for role guards, which removes an extra database lookup from protected page loads after login.
 
 ## Recommended Stack
 

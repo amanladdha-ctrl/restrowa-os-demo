@@ -2,14 +2,26 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 
 const SESSION_COOKIE = "restrowa_session";
 const SESSION_DAYS = 7;
 
-type SessionPayload = {
-  userId: string;
+export type SessionUser = {
+  email: string;
   exp: number;
+  id: string;
+  name: string | null;
+  passwordChangeRecommended: boolean;
+  restaurant: {
+    id: string;
+    name: string;
+    paymentDueAmount: string;
+    slug: string;
+    status: string;
+    trialEndDate: string;
+  } | null;
+  restaurantId: string | null;
+  role: UserRole;
 };
 
 function getSecret() {
@@ -34,19 +46,19 @@ function safeEqual(a: string, b: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-export function createSessionToken(userId: string) {
+export function createSessionTokenFromUser(user: Omit<SessionUser, "exp">) {
   const payload = encode({
-    userId,
+    ...user,
     exp: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000
-  } satisfies SessionPayload);
+  } satisfies SessionUser);
 
   return `${payload}.${sign(payload)}`;
 }
 
-export async function setSession(userId: string) {
+export async function setSession(user: Omit<SessionUser, "exp">) {
   const cookieStore = await cookies();
 
-  cookieStore.set(SESSION_COOKIE, createSessionToken(userId), {
+  cookieStore.set(SESSION_COOKIE, createSessionTokenFromUser(user), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -69,30 +81,10 @@ export async function getCurrentUser() {
   const [payload, signature] = token.split(".");
   if (!payload || !signature || !safeEqual(signature, sign(payload))) return null;
 
-  const session = decode<SessionPayload>(payload);
+  const session = decode<SessionUser>(payload);
   if (session.exp < Date.now()) return null;
 
-  return prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      passwordChangeRecommended: true,
-      restaurantId: true,
-      restaurant: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          status: true,
-          trialEndDate: true,
-          paymentDueAmount: true
-        }
-      }
-    }
-  });
+  return session;
 }
 
 export async function requireRole(roles: UserRole[]) {
