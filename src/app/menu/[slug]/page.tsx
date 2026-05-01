@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { FoodImage } from "@/components/food-image";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { StatusBadge } from "@/components/status-badge";
 import { addToCartAction } from "@/app/menu/actions";
 import { calculateCartTotals, getExistingCartForRestaurant } from "@/lib/cart";
@@ -52,9 +53,11 @@ export default async function PublicMenuPage({
     (total, category) => total + category.items.length,
     0
   );
-  const cart = await getExistingCartForRestaurant(restaurant.id);
+  const [cart, recentOrderRefs] = await Promise.all([
+    getExistingCartForRestaurant(restaurant.id),
+    getRecentOrdersForRestaurant(restaurant.id)
+  ]);
   const cartTotals = cart ? calculateCartTotals(cart) : null;
-  const recentOrderRefs = await getRecentOrdersForRestaurant(restaurant.id);
   const recentOrders = recentOrderRefs.length
     ? await prisma.order.findMany({
         where: {
@@ -154,32 +157,38 @@ export default async function PublicMenuPage({
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <a
+                  <Link
                     className="rounded-full px-4 py-2 text-xs font-black text-white"
                     href={`/menu/${restaurant.slug}/cart`}
                     style={{ backgroundColor: "var(--restro-primary)" }}
                   >
                     Cart {cartTotals?.itemCount ? `(${cartTotals.itemCount})` : ""}
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     className="rounded-full bg-white px-4 py-2 text-xs font-black text-clay"
                     href={`/whatsapp-simulator/${restaurant.slug}`}
                   >
                     WhatsApp demo
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
 
+            {query.added === "1" ? (
+              <div className="mt-4 rounded-3xl bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">
+                Item added to cart.
+              </div>
+            ) : null}
+
             {cartTotals?.itemCount ? (
-              <a
+              <Link
                 className="mt-4 flex items-center justify-between rounded-3xl px-5 py-4 text-sm font-black text-white shadow-soft"
                 href={`/menu/${restaurant.slug}/cart`}
                 style={{ backgroundColor: "var(--restro-primary)" }}
               >
                 <span>{cartTotals.itemCount} item(s) in cart</span>
                 <span>{formatCurrency(cartTotals.totalAmount)} · Checkout</span>
-              </a>
+              </Link>
             ) : null}
 
             {recentOrders.length ? (
@@ -187,7 +196,7 @@ export default async function PublicMenuPage({
                 <p className="font-black text-ink">Your recent orders</p>
                 <div className="mt-3 grid gap-2">
                   {recentOrders.map((order) => (
-                    <a
+                    <Link
                       className="flex items-center justify-between rounded-2xl bg-cream px-4 py-3 text-sm"
                       href={`/menu/${restaurant.slug}/orders/${order.id}/track`}
                       key={order.id}
@@ -198,7 +207,7 @@ export default async function PublicMenuPage({
                       <span className="font-black text-clay">
                         {formatCurrency(order.totalAmount.toString())}
                       </span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -266,14 +275,11 @@ export default async function PublicMenuPage({
                                   />
                                   <input name="menuItemId" type="hidden" value={item.id} />
                                   <input name="quantity" type="hidden" value="1" />
-                                  <button
-                                    className="rounded-full px-4 py-2 text-xs font-black text-white"
-                                    style={{
-                                      backgroundColor: "var(--restro-primary)"
-                                    }}
-                                  >
-                                    Add
-                                  </button>
+                                  <PendingSubmitButton
+                                    className="rounded-full px-4 py-2 text-xs font-black text-white disabled:cursor-wait disabled:opacity-70"
+                                    label="Add"
+                                    pendingLabel="Adding..."
+                                  />
                                 </form>
                               </div>
                             </div>

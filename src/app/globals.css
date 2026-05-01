@@ -29,6 +29,10 @@ button {
   font: inherit;
 }
 
+button:disabled {
+  cursor: wait;
+}
+
 .focus-ring {
   @apply focus:outline-none focus:ring-4 focus:ring-saffron/25;
 }

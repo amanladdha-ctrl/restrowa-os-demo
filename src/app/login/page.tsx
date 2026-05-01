@@ -1,4 +1,5 @@
 import { loginAction } from "@/app/login/actions";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 
 const errorMessages: Record<string, string> = {
   missing: "Email and password are required.",
@@ -72,9 +73,11 @@ export default async function LoginPage({
             type="password"
           />
 
-          <button className="focus-ring mt-7 w-full rounded-2xl bg-saffron px-5 py-3 font-black text-white transition hover:bg-clay">
-            Sign in
-          </button>
+          <PendingSubmitButton
+            className="focus-ring mt-7 w-full rounded-2xl bg-saffron px-5 py-3 font-black text-white transition hover:bg-clay disabled:cursor-wait disabled:opacity-70"
+            label="Sign in"
+            pendingLabel="Signing you in..."
+          />
         </form>
       </section>
     </main>

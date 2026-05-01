@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { placeOrderAction } from "@/app/menu/[slug]/checkout/actions";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { calculateCartTotals, getCartForRestaurant } from "@/lib/cart";
 import { formatCurrency } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -240,9 +241,11 @@ export default async function CheckoutPage({
                 Checkout disabled
               </div>
             ) : (
-              <button className="rounded-2xl bg-saffron px-5 py-4 text-base font-black text-white shadow-soft">
-                Place order
-              </button>
+              <PendingSubmitButton
+                className="rounded-2xl bg-saffron px-5 py-4 text-base font-black text-white shadow-soft disabled:cursor-wait disabled:opacity-70"
+                label="Place order"
+                pendingLabel="Placing order..."
+              />
             )}
           </form>
 

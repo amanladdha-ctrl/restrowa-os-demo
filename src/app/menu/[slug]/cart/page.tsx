@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FoodImage } from "@/components/food-image";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { StatusBadge } from "@/components/status-badge";
 import {
   applyCouponAction,
@@ -117,16 +118,20 @@ export default async function CartPage({
                             type="number"
                             defaultValue={item.quantity}
                           />
-                          <button className="rounded-2xl bg-ink px-4 py-2 text-sm font-black text-white">
-                            Update
-                          </button>
+                          <PendingSubmitButton
+                            className="rounded-2xl bg-ink px-4 py-2 text-sm font-black text-white disabled:cursor-wait disabled:opacity-70"
+                            label="Update"
+                            pendingLabel="Updating..."
+                          />
                         </form>
                         <form action={removeCartItemAction}>
                           <input name="restaurantSlug" type="hidden" value={slug} />
                           <input name="cartItemId" type="hidden" value={item.id} />
-                          <button className="rounded-2xl bg-red-50 px-4 py-2 text-sm font-black text-red-700">
-                            Remove
-                          </button>
+                          <PendingSubmitButton
+                            className="rounded-2xl bg-red-50 px-4 py-2 text-sm font-black text-red-700 disabled:cursor-wait disabled:opacity-70"
+                            label="Remove"
+                            pendingLabel="Removing..."
+                          />
                         </form>
                       </div>
                     </div>
@@ -142,7 +147,11 @@ export default async function CartPage({
                   <p className="font-black text-emerald-700">{cart.coupon.code}</p>
                   <form action={clearCouponAction}>
                     <input name="restaurantSlug" type="hidden" value={slug} />
-                    <button className="text-sm font-black text-red-700">Remove</button>
+                    <PendingSubmitButton
+                      className="text-sm font-black text-red-700 disabled:opacity-70"
+                      label="Remove"
+                      pendingLabel="Removing..."
+                    />
                   </form>
                 </div>
               ) : (
@@ -153,9 +162,11 @@ export default async function CartPage({
                     name="couponCode"
                     placeholder="DEMO10"
                   />
-                  <button className="rounded-2xl bg-saffron px-5 py-3 text-sm font-black text-white">
-                    Apply
-                  </button>
+                  <PendingSubmitButton
+                    className="rounded-2xl bg-saffron px-5 py-3 text-sm font-black text-white disabled:cursor-wait disabled:opacity-70"
+                    label="Apply"
+                    pendingLabel="Applying..."
+                  />
                 </form>
               )}
             </section>
