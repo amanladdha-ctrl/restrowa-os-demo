@@ -6,6 +6,8 @@ Added:
 
 - Client-side add-to-cart flow on the public menu, so cart count and amount update live without a full page refresh.
 - Dedicated JSON cart-add API route for lighter public ordering interactions.
+- Client-side cart mutations for quantity changes, remove item, apply coupon, and clear coupon without a full page refresh.
+- Dedicated JSON cart-mutation API route for live cart updates.
 - Shared route loading states for login, menu, cart, checkout, admin, owner, and staff pages.
 - Pending button feedback like `Signing you in...` and `Adding...` so clicks no longer feel invisible.
 
@@ -13,6 +15,7 @@ Changed:
 
 - Removed recent-order lookup from the first public menu render to reduce page-load work for trial traffic.
 - Public menu cart summary now stays visible as a live-updating checkout shortcut.
+- Public cart page now keeps totals in sync after quantity and coupon changes without a route redirect.
 
 Verified:
 

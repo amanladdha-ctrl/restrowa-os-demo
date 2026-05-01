@@ -60,6 +60,7 @@
 - [x] Platform per-order fee ledger creation.
 - [x] Order confirmation and tracking page.
 - [x] No-refresh live add-to-cart updates on public menu.
+- [x] No-refresh live cart quantity, remove, and coupon updates.
 - [ ] Client-side cart drawer polish.
 - [ ] Better QR image for mock UPI.
 - [ ] Customer-friendly validation without full page redirects.

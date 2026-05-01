@@ -63,6 +63,7 @@ Built so far:
 - Super Admin restaurant detail page also supports Excel/CSV bulk menu upload.
 - Downloadable `.xlsx` and `.csv` templates are available for one-shot restaurant menu setup.
 - Public menu add-to-cart now updates cart count and total live without a full page refresh.
+- Cart page quantity changes, remove actions, and coupon changes now update live without a full page refresh.
 - Public menu no longer fetches recent-order history during first load, which keeps trial/demo browsing lighter.
 - Login, menu, cart, checkout, admin, owner, and staff routes now show explicit loading or pending feedback instead of blank waiting states.
 
@@ -214,7 +215,7 @@ Open:
 - Confirm `/menu/mewad-bites` uses the restaurant logo/colors.
 - Add an item from public menu and confirm cart count updates.
 - Add an item from public menu and confirm the cart summary updates live without a full page refresh.
-- Open cart, update quantity, remove item, and apply coupon `DEMO10`.
+- Open cart, update quantity, remove item, and apply coupon `DEMO10` without a full page refresh.
 - Continue to checkout.
 - Place a delivery order with COD.
 - Place another order with mock UPI QR and confirm payment status is pending verification.
